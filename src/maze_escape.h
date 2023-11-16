@@ -32,42 +32,59 @@
 #include <vector>
 #include <queue>
 
-#define NOENTRY '#'
-#define ENTRY '.'
+struct Cell{
+    int x, y;
+    char value;
+    int dist;
+
+    Cell(std::pair<int, int> coord, char val, int dist){
+        x = coord.first, y = coord.second, value = val, this->dist = dist;
+    }
+};
 
 int traverse(std::vector<std::string> &graph) 
 {
-	std::queue<char> q;
+    char ENTRY = '.', NOENTRY = '#', TARGET = 't';
+
+	std::queue<Cell> q;
 	std::vector<std::vector<bool>> visited(graph.size(), std::vector<bool>(graph[0].size(), false));
-	visited[0][0] = true;
-	q.push(graph[0][0]);
+
+    Cell source(std::make_pair(0,0),graph[0][0],0);
+    visited[source.x][source.y] = true;
+
+	q.push(source);
 
 	// down, up, right, left
 	std::vector<int> dx = {1,-1,0,0};
 	std::vector<int> dy = {0,0,1,-1};
 
-	int x = 0, y = 0;
 
 	while(!q.empty()){
+        Cell current = q.front();
 
-		for(int i = 0; i < 4; ++i){
-			int nx = x + dx[i];
-			int ny = y + dy[i];
-			//check bounds
-			if(nx < 0 || ny < 0 || nx >= graph.size() || ny >= graph[0].size())
-				continue;
-			char current = graph[nx][ny];
-            if(current == NOENTRY)
+        int x = current.x, y = current.y;
+
+        if(current.value == TARGET)
+            return current.dist;
+
+        q.pop();
+
+        for(int i = 0; i < 4; ++i){
+            int nx = x + dx[i], ny = y + dy[i];
+
+            // Hit a wall.
+            if(nx < 0 || ny < 0 || nx >= graph.size() || ny >= graph[0].size())
                 continue;
-			if(current == ENTRY && !visited[nx][ny]){
-                x = nx;
-                y = ny;
-				visited[nx][ny] = true;
-				q.push(graph[nx][ny]);
-				q.pop();
-				i = 4;
-			}
-		}
+            else{
+                if(!visited[nx][ny] && graph[nx][ny] == ENTRY){
+                    visited[nx][ny] = true;
+                    Cell neighbor(std::make_pair(nx,ny),graph[nx][ny],current.dist+1);
+                    q.push(neighbor);
+                }
+
+            }
+
+        }
 	}
 	
 	for(int i = 0; i < visited.size(); ++i){
