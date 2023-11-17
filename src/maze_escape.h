@@ -31,69 +31,70 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-
-struct Cell{
-    int x, y;
-    char value;
-    int dist;
-
-    Cell(std::pair<int, int> coord, char val, int dist){
-        x = coord.first, y = coord.second, value = val, this->dist = dist;
-    }
-};
+#include <map>
 
 int traverse(std::vector<std::string> &graph) 
 {
-    char ENTRY = '.', NOENTRY = '#', TARGET = 't';
+    char ENTRY = '.', TARGET = 't';
 
-	std::queue<Cell> q;
-	std::vector<std::vector<bool>> visited(graph.size(), std::vector<bool>(graph[0].size(), false));
+    std::map<std::pair<int,int>, bool> V;
+    std::map<std::pair<int,int>, int> dist;
+	std::queue<std::pair<int,int>> q;
 
-    Cell source(std::make_pair(0,0),graph[0][0],0);
-    visited[source.x][source.y] = true;
+    int x = 0, y = 0;
 
-	q.push(source);
+    V[std::make_pair(x,y)] = true;
+    dist[std::make_pair(x,y)] = 0;
+
+	q.push(std::make_pair(x,y));
 
 	// down, up, right, left
-	std::vector<int> dx = {1,-1,0,0};
-	std::vector<int> dy = {0,0,1,-1};
+	int dx[] = {1,-1,0,0};
+	int dy[] = {0,0,1,-1};
 
+    do{
+        auto U = q.front();
+        x = U.first, y = U.second;
 
-	while(!q.empty()){
-        Cell current = q.front();
-
-        int x = current.x, y = current.y;
-
-        if(current.value == TARGET)
-            return current.dist;
+        if(graph[x][y] == TARGET)
+            return dist[U];
 
         q.pop();
 
         for(int i = 0; i < 4; ++i){
             int nx = x + dx[i], ny = y + dy[i];
-
-            // Hit a wall.
+            // hit a wall
             if(nx < 0 || ny < 0 || nx >= graph.size() || ny >= graph[0].size())
                 continue;
-            else{
-                if(!visited[nx][ny] && graph[nx][ny] == ENTRY){
-                    visited[nx][ny] = true;
-                    Cell neighbor(std::make_pair(nx,ny),graph[nx][ny],current.dist+1);
-                    q.push(neighbor);
-                }
-
+            if(graph[nx][ny] == ENTRY && V.find(std::make_pair(nx,ny)) == V.end()){
+                q.push(std::make_pair(nx,ny));
+                V[std::make_pair(nx,ny)] = true;
+                dist[std::make_pair(nx,ny)] = dist[std::make_pair(x,y)]+1;
             }
 
-        }
-	}
-	
-	for(int i = 0; i < visited.size(); ++i){
-		for(int j = 0; j < visited[0].size(); ++j){
-			std::cout << visited[i][j];
-		}
-		std::cout << std::endl;
-	}
+            if(graph[nx][ny] == TARGET)
+                return dist[std::make_pair(nx,ny)];
 
+        }
+    }
+    while(!q.empty());
+
+    std::vector<std::vector<int>> dist_g;
+    dist_g.reserve(graph.size());
+    for(int i = 0; i < graph.size(); ++i){
+        dist_g.emplace_back('#');
+        dist_g[i].reserve(graph[0].size());
+    }
+    for(auto& vertex : dist){
+        dist_g[vertex.first.first][vertex.first.second] = vertex.second;
+    }
+
+    for(int i = 0; i < dist_g.size(); ++i){
+        for(int j = 0; j < dist_g[0].size(); ++j){
+            std::cout << dist_g[i][j];
+        }
+        std::cout << std::endl;
+    }
 
 	return -1;
 }

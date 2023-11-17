@@ -9,4 +9,5 @@ include_directories(test-unit)
 add_executable(maze_escape
         src/maze_escape.h
         test-unit/catch.hpp
-        test-unit/test.cpp)
+        test-unit/test.cpp
+)
